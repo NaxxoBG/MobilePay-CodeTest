@@ -6,7 +6,7 @@ namespace LogTest
     public interface ILog
     {
         /// <summary>
-        /// Stop the logging. If any outstadning logs theses will not be written to Log
+        /// Stop the logging. If any outstanding logs theses will not be written to Log
         /// </summary>
         void StopWithoutFlush();
 
@@ -21,6 +21,9 @@ namespace LogTest
         /// <param name="text">The text to written to the log</param>
         void Write(string text);
 
-
+        /// <summary>
+        /// Create a new instance of the logger.
+        /// </summary>
+        ILog NewInstance();
     }
 }

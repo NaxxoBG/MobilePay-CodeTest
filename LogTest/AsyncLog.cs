@@ -1,114 +1,78 @@
-﻿namespace LogTest
+﻿using System.Linq;
+
+namespace LogTest
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
     using System.Threading;
+    using System.Linq;
 
     public class AsyncLog : ILog
     {
-        private Thread _runThread;
+        private FileHandler _handler;
         private List<LogLine> _lines = new List<LogLine>();
-
-        private StreamWriter _writer; 
-
         private bool _exit;
+        private bool _quitWithFlush;
+        
 
         public AsyncLog()
         {
-            if (!Directory.Exists(@"C:\LogTest")) 
-                Directory.CreateDirectory(@"C:\LogTest");
-
-            this._writer = File.AppendText(@"C:\LogTest\Log" + DateTime.Now.ToString("yyyyMMdd HHmmss fff") + ".log");
-            
-            this._writer.Write("Timestamp".PadRight(25, ' ') + "\t" + "Data".PadRight(15, ' ') + "\t" + Environment.NewLine);
-
-            this._writer.AutoFlush = true;
-
-            this._runThread = new Thread(this.MainLoop);
-            this._runThread.Start();
+            _handler = new FileHandler();
+            new Thread(MainLoop).Start();
         }
-
-        private bool _QuitWithFlush = false;
-
-
-        DateTime _curDate = DateTime.Now;
 
         private void MainLoop()
         {
-            while (!this._exit)
+            while (!_exit)
             {
-                if (this._lines.Count > 0)
+                var f = 0;
+                var handled = new List<LogLine>();
+
+                foreach (LogLine logLine in _lines.ToList())
                 {
-                    int f = 0;
-                    List<LogLine> _handled = new List<LogLine>();
+                    f++;
 
-                    foreach (LogLine logLine in this._lines)
-                    {
-                        f++;
+                    if (f > 5 || _exit && !_quitWithFlush)
+                        continue;
 
-                        if (f > 5)
-                            continue;
-                        
-                        if (!this._exit || this._QuitWithFlush)
-                        {
-                            _handled.Add(logLine);
-
-                            StringBuilder stringBuilder = new StringBuilder();
-
-                            if ((DateTime.Now - _curDate).Days != 0)
-                            {
-                                _curDate = DateTime.Now;
-
-                                this._writer = File.AppendText(@"C:\LogTest\Log" + DateTime.Now.ToString("yyyyMMdd HHmmss fff") + ".log");
-
-                                this._writer.Write("Timestamp".PadRight(25, ' ') + "\t" + "Data".PadRight(15, ' ') + "\t" + Environment.NewLine);
-
-                                stringBuilder.Append(Environment.NewLine);
-
-                                this._writer.Write(stringBuilder.ToString());
-
-                                this._writer.AutoFlush = true;
-                            }
-
-                            stringBuilder.Append(logLine.Timestamp.ToString("yyyy-MM-dd HH:mm:ss:fff"));
-                            stringBuilder.Append("\t");
-                            stringBuilder.Append(logLine.LineText());
-                            stringBuilder.Append("\t");
-
-                            stringBuilder.Append(Environment.NewLine);
-
-                            this._writer.Write(stringBuilder.ToString());
-                        }
-                    }
-
-                    for (int y = 0; y < _handled.Count; y++)
-                    {
-                        this._lines.Remove(_handled[y]);   
-                    }
-
-                    if (this._QuitWithFlush == true && this._lines.Count == 0) 
-                        this._exit = true;
-
-                    Thread.Sleep(50);
+                    handled.Add(logLine);
+                    _handler.WriteToLog(logLine);
                 }
+
+                handled.ForEach(t => _lines.Remove(t));
+
+                if (_quitWithFlush && _lines.Count == 0)
+                {
+                    _exit = true;
+                    _handler.CloseWriter();
+                }
+                Thread.Sleep(50);
             }
+            Console.WriteLine("DONE WITH LOGGING");
         }
 
         public void StopWithoutFlush()
         {
-            this._exit = true;
+            _handler.CloseWriter();
+            Console.WriteLine($"Logger stopped without flushing! {_lines.Count} skipped.");
+            _exit = true;
         }
 
         public void StopWithFlush()
         {
-            this._QuitWithFlush = true;
+            _quitWithFlush = true;
         }
 
         public void Write(string text)
         {
-            this._lines.Add(new LogLine() { Text = text, Timestamp = DateTime.Now });
+            _lines.Add(new LogLine() { Text = text, Timestamp = DateTime.Now });
+        }
+
+        public ILog NewInstance()
+        {
+            return new AsyncLog();
         }
     }
 }
