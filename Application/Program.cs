@@ -15,9 +15,9 @@ namespace LogUsers
     {
         static void Main(string[] args)
         {
+            // You can set the logger you want to use here.
             ILog logger = new AsyncLogV2();
             RunLogger(logger);
-            Console.ReadLine();
         }
 
         private static void RunLogger(ILog logger)

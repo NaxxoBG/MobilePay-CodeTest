@@ -16,3 +16,4 @@ C:\Users\Naxxo\Desktop\DanskeBankTask\MobilePay-CodeTest\LogTest\bin\Debug\nunit
 C:\Users\Naxxo\Desktop\DanskeBankTask\MobilePay-CodeTest\LogTest\bin\Debug\nunit-agent.exe
 C:\Users\Naxxo\Desktop\DanskeBankTask\MobilePay-CodeTest\LogTest\bin\Debug\nunit-agent.exe.config
 C:\Users\Naxxo\Desktop\DanskeBankTask\MobilePay-CodeTest\LogTest\bin\Debug\nunit-agent-x86.exe.config
+C:\Users\Naxxo\Desktop\DanskeBankTask\MobilePay-CodeTest\LogTest\obj\Debug\LogComponent.csprojAssemblyReference.cache
